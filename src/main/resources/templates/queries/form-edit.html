@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit SQL Query</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .checkbox-container {
+            margin-top: 20px;
+        }
+
+        .btn-group {
+            margin-top: 30px;
+        }
+
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1976d2;
+        }
+
+        .back-link {
+            margin-left: 15px;
+            text-decoration: none;
+            color: #555;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Edit SQL Query</h1>
+
+    <form method="post" th:action="@{'/queries/edit/' + ${q.id}}">
+
+        <label>Question</label>
+        <textarea name="question"
+                  rows="3"
+                  required
+                  th:text="${q.question}"></textarea>
+
+        <label>Schema Name</label>
+        <input type="text"
+               name="schemaName"
+               th:value="${q.schemaName}" />
+
+        <label>Difficulty</label>
+        <select name="difficulty" required>
+            <option th:each="d : ${difficulties}"
+                    th:value="${d}"
+                    th:text="${d}"
+                    th:selected="${d} == ${q.difficulty}">
+            </option>
+        </select>
+
+        <label>SQL Answer</label>
+        <textarea name="sqlAnswer"
+                  rows="6"
+                  required
+                  th:text="${q.sqlAnswer}"></textarea>
+
+        <div class="checkbox-container">
+            <label>
+                <input type="checkbox"
+                       name="chatgptValid"
+                       value="true"
+                       th:checked="${q.chatgptValid}" />
+                ChatGPT valid
+            </label>
+        </div>
+
+        <label>Notes</label>
+        <textarea name="notes"
+                  rows="3"
+                  th:text="${q.notes}"></textarea>
+
+        <div class="btn-group">
+            <button type="submit">Update</button>
+            <a href="/queries" class="back-link">← Back</a>
+        </div>
+
+    </form>
+</div>
+
+</body>
+</html>

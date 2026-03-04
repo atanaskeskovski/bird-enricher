@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add New Query</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background:#f6f7fb; }
+        .card { max-width: 760px; background:#fff; padding:24px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.08); }
+        h2 { margin:0 0 18px 0; }
+        label { font-weight: 600; display:block; margin: 12px 0 6px; }
+        input, textarea, select { width:100%; padding:10px; border:1px solid #dcdfe6; border-radius:8px; font-size:14px; }
+        textarea { resize: vertical; }
+        .row { display:flex; gap:12px; }
+        .row > div { flex:1; }
+        .actions { display:flex; gap:10px; margin-top:18px; }
+        .btn { padding:10px 14px; border:none; border-radius:8px; cursor:pointer; font-weight:700; }
+        .btn-primary { background:#1e88e5; color:#fff; }
+        .btn-secondary { background:#e9eef6; color:#1f2d3d; text-decoration:none; display:inline-flex; align-items:center; }
+        .hint { color:#667085; font-size:12px; margin-top:6px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>+ Add New SQL Query</h2>
+
+    <form th:action="@{/queries/add}" th:object="${query}" method="post">
+
+        <label>Question</label>
+        <textarea th:field="*{question}" rows="3" required></textarea>
+
+        <div class="row">
+            <div>
+                <label>Schema Name</label>
+                <input type="text" th:field="*{schemaName}" placeholder="e.g. student_club"/>
+            </div>
+            <div>
+                <label>Difficulty</label>
+                <select name="difficulty" required>
+                    <option th:each="d : ${difficulties}"
+                            th:value="${d}"
+                            th:text="${d}">
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <label>SQL Answer</label>
+        <textarea th:field="*{sqlAnswer}" rows="8" required></textarea>
+
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+            <input type="checkbox" name="chatgptValid" value="true"/>
+            ChatGPT valid
+        </label>
+
+        <label>Notes</label>
+        <textarea th:field="*{notes}" rows="3" placeholder="Optional..."></textarea>
+
+        <div class="actions">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-secondary" th:href="@{/queries}">← Back</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>
