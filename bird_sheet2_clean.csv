@@ -1,0 +1,235 @@
+"question","schema_name","difficulty","sql_answer","chatgpt_valid","notes"
+"How many total members are there in the club?","student_club","EASY","SELECT COUNT(*) AS total_members FROM member;","1",""
+"How many members have a registered email address?","student_club","EASY","SELECT COUNT(*) AS members_with_email  FROM member  WHERE email IS NOT NULL;","1",""
+"How many distinct positions exist in the club?","student_club","EASY","SELECT COUNT(DISTINCT position) AS distinct_positions FROM member WHERE position IS NOT NULL;","1",""
+"What is the highest ZIP code among the club members?","student_club","EASY","SELECT MAX(zip) AS max_zip FROM member;","1",""
+"How many members have the major 'Computer Science'?","student_club","EASY","SELECT COUNT(*) FROM member WHERE link_to_major = 'Computer Science';","0","initial SQL used wrong column name (major instead of link_to_major)"
+"Which members have attended the highest number of events?","student_club","MEDIUM","SELECT m.member_id, m.first_name, m.last_name, COUNT(*) AS attendances 
+FROM member m 
+JOIN attendance a ON a.link_to_member = m.member_id 
+GROUP BY m.member_id, m.first_name, m.last_name 
+ORDER BY attendances DESC 
+LIMIT 5;","0","initial SQL used wrong column name in attendance table"
+"How many attendees does each event have?","student_club","MEDIUM","SELECT a.link_to_event AS event_id, COUNT(*) AS attendees FROM attendance a GROUP BY a.link_to_event ORDER BY attendees DESC LIMIT 10;","1",""
+"Which members have never attended any event?","student_club","MEDIUM","SELECT m.member_id, m.first_name, m.last_name FROM member m LEFT JOIN attendance a ON a.link_to_member = m.member_id WHERE a.link_to_member IS NULL;","1",""
+"How many events does each member have?","student_club","MEDIUM","SELECT m.member_id, COUNT(a.link_to_event) AS total_events
+FROM member m
+JOIN attendance a ON a.link_to_member = m.member_id
+GROUP BY m.member_id;","0","Used wrong column name (a.event_id). Correct column is link_to_event."
+"Which events have more than 20 attendees?","student_club","MEDIUM","SELECT a.link_to_event AS event_id, COUNT(*) AS attendees FROM attendance a GROUP BY a.link_to_event HAVING COUNT(*) > 20 ORDER BY attendees DESC;","1",""
+"How many events have above-average attendance?","student_club","HARD","WITH per_event AS (SELECT link_to_event, COUNT(*) AS attendees FROM attendance GROUP BY link_to_event)
+SELECT COUNT(*) AS events_above_avg FROM per_event WHERE attendees > (SELECT AVG(attendees) FROM per_event);","1",""
+"How many events have above-average total spending (based on money spent)?","student_club","HARD","SELECT COUNT(*) AS events_above_avg_spending
+FROM (SELECT b.link_to_event, SUM(b.spent) AS total_spent FROM budget b GROUP BY b.link_to_event) x
+WHERE x.total_spent > (SELECT AVG(total_spent) FROM (SELECT b.link_to_event, SUM(b.spent) AS total_spent FROM budget b GROUP BY b.link_to_event) y);","0","Logical error: used amount (quantity) instead of spent (money). SQL executed
+but answer was incorrect for the question."
+"How many members have attended at least one event that had above-average attendance?","student_club","HARD","SELECT COUNT(DISTINCT a.link_to_member) AS members_in_popular_events
+FROM attendance a
+WHERE a.link_to_event IN (SELECT link_to_event FROM attendance GROUP BY link_to_event HAVING COUNT(*) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM attendance GROUP BY link_to_event) x));","1",""
+"For each year, which event had the highest attendance, and how many attendees did it have?","student_club","HARD","SELECT t.yr, t.event_id, t.attendees
+FROM (SELECT YEAR(e.event_date) AS yr, a.link_to_event AS event_id, COUNT(*) AS attendees FROM attendance a JOIN event e ON e.event_id = a.link_to_event GROUP BY YEAR(e.event_date), a.link_to_event) t
+WHERE t.attendees = (SELECT MAX(t2.attendees) FROM (SELECT a2.link_to_event AS event_id, COUNT(*) AS attendees FROM attendance a2 JOIN event e2 ON e2.event_id = a2.link_to_event WHERE YEAR(e2.event_date) = t.yr GROUP BY a2.link_to_event) t2)
+ORDER BY t.yr, t.event_id;","1",""
+"Which members have attended more events than the average number of events attended per member?","student_club","HARD","SELECT m.member_id, COUNT(a.link_to_event) AS total_events
+FROM member m JOIN attendance a ON a.link_to_member = m.member_id
+GROUP BY m.member_id
+HAVING COUNT(a.link_to_event) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM attendance GROUP BY link_to_member) x);","0","Wrong column name used (a.event_id). Correct column in attendance 
+table is link_to_event."
+"How many races are recorded in the Formula 1 dataset?","formula_1","EASY","SELECT COUNT(*) AS total_races FROM races;","1",""
+"How many drivers are recorded in the Formula 1 dataset?","formula_1","EASY","SELECT COUNT(DISTINCT year) AS total_seasons FROM races;","0","Column 'season' does not exist in races table. Correct column name is 'year'."
+"How many constructors are there in the dataset?","formula_1","EASY","SELECT COUNT(*) AS total_constructors FROM constructors;","1",""
+"What is the earliest year recorded in the Formula 1 dataset?","formula_1","EASY","SELECT MIN(year) AS earliest_season FROM races;","1",""
+"How many races were held in the 2010 season?","formula_1","EASY","SELECT COUNT(*) AS races_2010 FROM races WHERE year = 2010;","1",""
+"Which circuits have hosted the highest number of races?","formula_1","MEDIUM","SELECT c.name, COUNT(*) AS total_races FROM races r JOIN circuits c ON r.circuitId = c.circuitId GROUP BY c.circuitId, c.name
+ORDER BY total_races DESC LIMIT 5;","1",""
+"How many drivers have won at least one race?","formula_1","MEDIUM","SELECT COUNT(DISTINCT driverId) AS drivers_with_wins FROM results
+WHERE position = 1;","1",""
+"What is the highest number of races held in a single season?","formula_1","MEDIUM","SELECT MAX(race_count) AS max_races_in_season FROM (SELECT year, COUNT(*) AS race_count FROM races GROUP BY year) x
+;","1",""
+"How many drivers have achieved at least one podium finish (position ≤ 3)?","formula_1","MEDIUM","SELECT COUNT(*) AS drivers_with_podium FROM drivers d
+WHERE EXISTS (SELECT 1 FROM results r WHERE r.driverId = d.driverId AND r.position <= 3);","1",""
+"How many different circuits have hosted races after the year 2010?","formula_1","MEDIUM","SELECT COUNT(DISTINCT r.circuitId) AS circuits_after_2010 FROM races r
+WHERE r.year > 2010;","1",""
+"How many drivers have at least one race win?","formula_1","HARD","SELECT COUNT(DISTINCT driverId) AS drivers_with_wins FROM results
+WHERE position = 1;","0","Logical error: used podium condition (position <= 3) instead of wins (position = 1)."
+"How many races were held in each country?","formula_1","HARD","SELECT c.country, COUNT(*) AS races_hosted FROM races r JOIN circuits c ON r.circuitId = c.circuitId
+GROUP BY c.country ORDER BY races_hosted DESC LIMIT 10;","1",""
+"Which driver has achieved the highest number of race wins?","formula_1","HARD","SELECT d.driverId, d.forename, d.surname, COUNT(*) AS wins FROM results r JOIN drivers d ON r.driverId = d.driverId
+WHERE r.position = 1 GROUP BY d.driverId, d.forename, d.surname ORDER BY wins DESC LIMIT 1;","0","Invalid use of aggregate function: MAX(COUNT(*)) is not allowed. 
+Nested aggregation requires subquery."
+"For each year, how many races were held in the season with the maximum number of races?","formula_1","HARD","SELECT year, race_count FROM (SELECT year, COUNT(*) AS race_count FROM races GROUP BY year) t WHERE race_count = (SELECT MAX(race_count) FROM (SELECT year, COUNT(*) AS race_count FROM races GROUP BY year) z);","1",""
+"Which driver has the highest average finishing position (minimum average position across all races)?","formula_1","HARD","SELECT d.driverId, d.forename, d.surname, AVG(r.position) AS avg_position FROM results r JOIN drivers d ON r.driverId = d.driverId WHERE r.position IS NOT NULL GROUP BY d.driverId, d.forename, d.surname ORDER BY avg_position ASC LIMIT 1;","1",""
+"How many transactions are associated with each account?","financial","EASY","SELECT CustomerID, COUNT(*) AS total_transactions
+FROM transactions_1k GROUP BY CustomerID ORDER BY total_transactions DESC LIMIT 5;","0","Requirement mismatch: used COUNT(*) instead of SUM(Amount * Price).
+Aggregation logic does not reflect total spending per customer."
+"How many distinct customers exist in the transactions table?","financial","EASY","SELECT COUNT(DISTINCT CustomerID) AS total_customers FROM transactions_1k;","1",""
+"How many different gas stations appear in the transactions table?","financial","EASY","SELECT COUNT(DISTINCT GasStationID) AS total_gas_stations FROM transactions_1k;","1",""
+"What is the highest transaction amount recorded?","financial","EASY","SELECT MAX(Amount) AS highest_amount FROM transactions_1k;","1",""
+"What is the average price across all transactions?","financial","EASY","SELECT AVG(Price) AS avg_price FROM transactions_1k;","1",""
+"Which customers have total spending above the average customer spending?","financial","MEDIUM","SELECT CustomerID, SUM(Amount * Price) AS total_spent FROM transactions_1k GROUP BY CustomerID HAVING SUM(Amount * Price) > (SELECT AVG(total_spent) FROM (SELECT SUM(Amount * Price) AS total_spent FROM transactions_1k GROUP BY CustomerID) x);","1",""
+"Which products generated more than 10,000 in total revenue?","financial","MEDIUM","SELECT p.ProductID, SUM(t.Amount * t.Price) AS total_revenue FROM transactions_1k t JOIN products p ON t.ProductID = p.ProductID GROUP BY p.ProductID HAVING SUM(t.Amount * t.Price) > 10000;","1",""
+"Which customers made transactions at more than 3 different gas stations?","financial","MEDIUM","SELECT CustomerID, COUNT(DISTINCT GasStationID) AS stations_used FROM transactions_1k GROUP BY CustomerID HAVING COUNT(DISTINCT GasStationID) > 3;","1",""
+"Which products have above-average total revenue?","financial","MEDIUM","SELECT ProductID, SUM(Amount * Price) AS total_revenue FROM transactions_1k GROUP BY ProductID HAVING SUM(Amount * Price) > (SELECT AVG(s) FROM (SELECT SUM(Amount * Price) AS s FROM transactions_1k GROUP BY ProductID) x);","0","Logical error: used SUM(Amount) (quantity) instead of SUM(Amount * Price) (revenue)."
+"Which customers have made transactions above the average transaction amount?","financial","MEDIUM","SELECT CustomerID, COUNT(*) AS high_value_transactions FROM transactions_1k
+WHERE (Amount * Price) > (SELECT AVG(Amount * Price) FROM transactions_1k) GROUP BY CustomerID;","1",""
+"How many customers have at least one transaction whose value equals their maximum transaction value?","financial","HARD","SELECT COUNT(DISTINCT t.CustomerID) AS customers_with_peak_txn FROM transactions_1k t
+WHERE (t.Amount * t.Price) = (SELECT MAX(t2.Amount * t2.Price) FROM transactions_1k t2 WHERE t2.CustomerID = t.CustomerID);","1",""
+"How many products have total revenue above the average product revenue?","financial","HARD","SELECT COUNT(*) AS products_above_avg FROM (
+SELECT p.ProductID, SUM(t.Amount * t.Price) AS total_revenue FROM transactions_1k t JOIN products p ON t.ProductID = p.ProductID GROUP BY p.ProductID
+HAVING SUM(t.Amount * t.Price) > (SELECT AVG(r) FROM (SELECT SUM(Amount * Price) AS r FROM transactions_1k GROUP BY ProductID) x)) q;","1",""
+"How many gas stations have at least one transaction value higher than that gas station’s average transaction value","financial","HARD","SELECT COUNT(DISTINCT t.GasStationID) AS gasstations_with_high_txn
+FROM transactions_1k t JOIN gasstations g ON t.GasStationID = g.GasStationID
+WHERE (t.Amount * t.Price) > (SELECT AVG(t2.Amount * t2.Price) FROM transactions_1k t2 WHERE t2.GasStationID = t.GasStationID);","1",""
+"How many customers have never bought ProductID = 1?","financial","HARD","SELECT COUNT(DISTINCT t.CustomerID) AS customers_never_bought_product_1
+FROM transactions_1k t
+WHERE NOT EXISTS (SELECT 1 FROM transactions_1k t2 WHERE t2.CustomerID = t.CustomerID AND t2.ProductID = 1);","1",""
+"How many superheroes have at least one superpower?","superhero","EASY","SELECT COUNT(DISTINCT s.id)
+FROM superhero s
+JOIN hero_power hp ON s.id = hp.hero_id;","0","Logical error: counted all superheroes instead of only those that have at least one superpower.
+Missing JOIN with hero_power table."
+"How many distinct superpowers exist?","superhero","EASY","SELECT COUNT(*) AS total_superpowers
+FROM superpower;","1",""
+"What is the minimum attribute value recorded?","superhero","EASY","SELECT MIN(value) AS min_attribute_value
+FROM hero_attribute;","1",""
+"List all distinct eye colors of superheroes.","superhero","EASY","SELECT DISTINCT eye_color
+FROM superhero;","1",""
+"How many heroes have blue eyes?","superhero","EASY","SELECT COUNT(*) 
+FROM superhero s
+JOIN colour c ON s.eye_colour_id = c.id
+WHERE c.colour = 'Blue';","0","Unknown column error: used eye_color instead of correct foreign key eye_colour_id.
+Incorrect column in colour table: used c.name but correct column is c.colour."
+"Which superheroes have more powers than the average number of powers per hero?","superhero","MEDIUM","SELECT hero_id, COUNT(*) AS power_count
+FROM hero_power
+GROUP BY hero_id
+HAVING COUNT(*) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) x);","1",""
+"How many superheroes have the power 'Flight'?","superhero","MEDIUM","SELECT COUNT(DISTINCT hp.hero_id) AS heroes_with_flight
+FROM hero_power hp
+JOIN superpower sp ON sp.id = hp.power_id
+WHERE sp.power_name = 'Flight';","0","Incorrect column reference: used s.hero_id instead of superhero.id.
+Unknown column error: used sp.power instead of correct column power_name."
+"Which 10 superheroes have the highest number of powers, and what is their eye colour?","superhero","MEDIUM","SELECT s.id, s.superhero_name, c.colour, COUNT(*) AS power_count
+FROM superhero s
+JOIN hero_power hp ON hp.hero_id = s.id
+JOIN colour c ON c.id = s.eye_colour_id
+GROUP BY s.id, s.superhero_name, c.colour
+ORDER BY power_count DESC
+LIMIT 10;","1",""
+"How many superheroes have more powers than the average hero?","superhero","MEDIUM","SELECT COUNT(*) AS heroes_above_avg_powers
+FROM (SELECT hero_id, COUNT(*) AS cnt FROM hero_power GROUP BY hero_id HAVING COUNT(*) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) x)) y;","1",""
+"Which eye colours appear in at least 200 superheroes?","superhero","MEDIUM","SELECT c.colour, COUNT(*) AS hero_count FROM superhero s
+JOIN colour c ON c.id = s.eye_colour_id GROUP BY c.colour HAVING COUNT(*) >= 200 ORDER BY hero_count DESC;","1",""
+"How many superheroes have more powers than the strongest hero (by total attribute value)?","superhero","HARD","SELECT p.publisher_name, AVG(pc.power_count) AS avg_powers_per_hero
+FROM publisher p JOIN superhero s ON s.publisher_id = p.id JOIN (SELECT hero_id, COUNT(*) AS power_count FROM hero_power GROUP BY hero_id) pc ON pc.hero_id = s.id
+GROUP BY p.publisher_name HAVING AVG(pc.power_count) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) x) ORDER BY avg_powers_per_hero DESC;","1",""
+"How many superheroes have no powers assigned?","superhero","HARD","SELECT COUNT(*) 
+FROM superhero s
+WHERE NOT EXISTS (
+  SELECT 1 FROM hero_power hp WHERE hp.hero_id = s.id
+);","1",""
+"How many heroes have the most common eye colour?","superhero","HARD","SELECT COUNT(*) AS heroes_most_common_eye_colour
+FROM superhero s
+WHERE s.eye_colour_id = (
+  SELECT eye_colour_id FROM superhero GROUP BY eye_colour_id ORDER BY COUNT(*) DESC LIMIT 1
+);","0","Wrong FK column (eye_id). Also subquery must be based on superhero frequency, not colour table alone."
+"How many superheroes have more powers than the average superhero?","superhero","HARD","SELECT COUNT(*) AS heroes_above_avg_powers
+FROM (SELECT hero_id, COUNT(*) AS power_count FROM hero_power GROUP BY hero_id HAVING COUNT(*) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) x)) y;","0","Logical error: compared hero ids instead of power counts. Corrected to count powers per hero and compare to average."
+"How many superheroes have the maximum number of powers assigned to any hero?","superhero","HARD","SELECT COUNT(*) AS heroes_with_max_powers
+FROM (SELECT hero_id, COUNT(*) AS power_count FROM hero_power GROUP BY hero_id HAVING COUNT(*) = (SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) x)) y;","1",""
+"How many cards exist in the database?","card_games","EASY","SELECT COUNT(*) AS total_cards FROM cards;","1",""
+"How many distinct suits are there?","card_games","EASY","SELECT COUNT(DISTINCT type) AS distinct_card_types
+FROM card;","0","Unknown column error: suit does not exist in card table.
+Correct column name is type."
+"How many cards were issued after January 1, 1995?","card_games","EASY","SELECT COUNT(*) AS cards_after_1995
+FROM card
+WHERE issued > '1995-01-01';","1",""
+"What is the most recent card issue date?","card_games","EASY","SELECT MAX(issued) AS latest_issue_date
+FROM card;","1",""
+"How many cards are of type 'gold'?","card_games","EASY","SELECT COUNT(*) AS gold_cards
+FROM card
+WHERE type = 'gold';","1",""
+"How many clients have more than one card?","card_games","MEDIUM","SELECT COUNT(*) AS clients_with_multiple_cards FROM (SELECT d.client_id FROM disp d JOIN card c ON c.disp_id = d.disp_id
+GROUP BY d.client_id HAVING COUNT(*) > 1) x;","1",""
+"Which 5 clients have the earliest card issue date?","card_games","MEDIUM","SELECT d.client_id, MIN(c.issued) AS first_card_date FROM disp d JOIN card c ON c.disp_id = d.disp_id
+GROUP BY d.client_id ORDER BY first_card_date ASC LIMIT 5;","1",""
+"How many accounts have more than 5 cards?","card_games","MEDIUM","SELECT COUNT(*) AS accounts_with_many_cards FROM (SELECT d.account_id FROM disp d JOIN card c ON c.disp_id = d.disp_id
+GROUP BY d.account_id HAVING COUNT(*) > 5) x;","0","Incorrect join: card does not link directly to account. Must join via disp table."
+"Which 5 accounts have the most cards?","card_games","MEDIUM","SELECT d.account_id, COUNT(*) AS num_cards
+FROM disp d
+GROUP BY d.account_id
+ORDER BY num_cards DESC
+LIMIT 5;","1",""
+"Which clients have cards linked to more than 1 account?","card_games","MEDIUM","SELECT d.client_id
+FROM disp d
+GROUP BY d.client_id
+HAVING COUNT(DISTINCT d.account_id) > 1;","1",""
+"Which 5 clients have the highest total number of cards across all their accounts?","card_games","HARD","WITH cc AS (SELECT d.client_id, COUNT(*) AS cards_cnt FROM disp d JOIN card c ON c.disp_id=d.disp_id GROUP BY d.client_id) SELECT client_id, cards_cnt FROM cc ORDER BY cards_cnt DESC LIMIT 5;","1",""
+"For each card type, what percentage of cards were issued after 1998-01-01?","card_games","HARD","WITH x AS (SELECT type, SUM(CASE WHEN issued>'1998-01-01' THEN 1 ELSE 0 END) AS after_cnt, COUNT(*) AS total_cnt FROM card GROUP BY type) SELECT type, ROUND(100*after_cnt/total_cnt,2) AS pct_after_1998 FROM x ORDER BY pct_after_1998 DESC;","1",""
+"Which accounts have more than 2 different card types?","card_games","HARD","SELECT d.account_id, COUNT(DISTINCT c.type) AS distinct_types
+FROM disp d
+JOIN card c ON c.disp_id = d.disp_id
+GROUP BY d.account_id
+ORDER BY distinct_types DESC
+LIMIT 10;","0","used c.account_id in the join, but the card table does not have account_id.
+
+Fix: The correct relationship is via disp_id: card.disp_id = disp.disp_id, and account_id comes from disp."
+"Which accounts have total transactions over 1,000,000 and at least 20 transactions?","card_games","HARD","SELECT t.account_id, COUNT(*) AS tx_cnt, SUM(t.amount) AS total_amount FROM trans t GROUP BY t.account_id HAVING SUM(t.amount)>1000000 AND COUNT(*)>=20;","1",""
+"Which districts have more than 10 clients and what is their average age?","card_games","HARD","SELECT d.district_id, COUNT(*) AS num_clients, ROUND(AVG(TIMESTAMPDIFF(YEAR,c.birth_date,CURDATE())),1) AS avg_age FROM client c JOIN district d ON d.district_id=c.district_id GROUP BY d.district_id HAVING COUNT(*)>10;","0","Mistake: joined using d.A1, but the district table does not contain column A1.
+Fix: The correct join is district.district_id = client.district_id."
+"Which clients have a total transaction amount greater than the average total transaction amount per client?","card_games","HARD","SELECT x.client_id, x.total_amount
+FROM (SELECT d.client_id, SUM(t.amount) AS total_amount FROM disp d JOIN trans t ON d.account_id=t.account_id GROUP BY d.client_id) x
+WHERE x.total_amount > (SELECT AVG(total_per_client) FROM (SELECT SUM(t.amount) AS total_per_client FROM disp d JOIN trans t ON d.account_id=t.account_id GROUP BY d.client_id) y);","1",""
+"Which accounts have more outgoing than incoming transactions and at least 30 transactions in total?","card_games","HARD","SELECT t.account_id FROM trans t GROUP BY t.account_id HAVING SUM(CASE WHEN t.type='VYDAJ' THEN 1 ELSE 0 END) > SUM(CASE WHEN t.type='PRIJEM' THEN 1 ELSE 0 END) AND COUNT(*)>=30;","1",""
+"How many schools are there?","california_schools","EASY","SELECT COUNT(*) FROM schools;","1",""
+"How many schools are in each county?","california_schools","EASY","SELECT county, COUNT(*) FROM schools GROUP BY county;","1",""
+"Which 5 schools have the highest total SAT score?","california_schools","EASY","SELECT sname, (AvgScrRead+AvgScrMath+AvgScrWrite) AS total_sat
+FROM satscores
+ORDER BY total_sat DESC
+LIMIT 5;","1",""
+"How many schools have at least 50 students scoring 1500+?","california_schools","EASY","SELECT COUNT(*)
+FROM satscores
+WHERE NumGE1500 >= 50;","1",""
+"What is the maximum SAT Math score?","california_schools","EASY","SELECT MAX(AvgScrMath)
+FROM satscores;","1",""
+"Which schools have an average SAT score above 1200?","california_schools","EASY","SELECT sname
+FROM satscores
+WHERE (AvgScrRead+AvgScrMath+AvgScrWrite) > 1200;","1",""
+"Which counties have at least 3 schools with more than 100 test takers?","california_schools","MEDIUM","SELECT sc.County
+FROM schools sc JOIN satscores ss ON sc.CDSCode = ss.cds
+WHERE ss.NumTstTakr > 100
+GROUP BY sc.County HAVING COUNT(*) >= 3;","0","Mistake: used sc.cds and sc.county, but schools has CDSCode and County.
+Fix: join with sc.CDSCode = ss.cds and group by sc.County."
+"Which school types (rtype) have an average total SAT above 1200?","california_schools","MEDIUM","SELECT rtype, AVG(AvgScrRead+AvgScrMath+AvgScrWrite) AS avg_total
+FROM satscores GROUP BY rtype HAVING avg_total > 1200;","1",""
+"Which counties have a maximum Reading SAT score above 550?","california_schools","MEDIUM","SELECT sc.County, MAX(ss.AvgScrRead) AS max_read
+FROM schools sc JOIN satscores ss ON sc.CDSCode = ss.cds
+GROUP BY sc.County HAVING max_read > 550;","1",""
+"Which counties have an average Reading score higher than the overall Reading average?","california_schools","MEDIUM","SELECT sc.County
+FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds
+GROUP BY sc.County HAVING AVG(ss.AvgScrRead)>(SELECT AVG(AvgScrRead) FROM satscores);","1",""
+"Which counties have at least 5 schools where Math score is greater than Reading score?","california_schools","MEDIUM","SELECT sc.County
+FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds WHERE ss.AvgScrMath>ss.AvgScrRead
+GROUP BY sc.County HAVING COUNT(*)>=5;","1",""
+"Which counties have an average total SAT score above the statewide average AND at least 10 schools with SAT data?","california_schools","HARD","SELECT sc.County FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds GROUP BY sc.County
+HAVING AVG(ss.AvgScrRead+ss.AvgScrMath+ss.AvgScrWrite)>(SELECT AVG(AvgScrRead+AvgScrMath+AvgScrWrite) FROM satscores) AND COUNT(*)>=10;","1",""
+"Which counties have the highest average total SAT score? (Top 5)","california_schools","HARD","SELECT sc.County, AVG(ss.AvgScrRead+ss.AvgScrMath+ss.AvgScrWrite) AS avg_total
+FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds GROUP BY sc.County
+ORDER BY avg_total DESC LIMIT 5;","0","Mistake: Missing GROUP BY sc.County. Aggregate AVG() is used without grouping, 
+so the query is invalid/wrong for “per county”."
+"Which counties have more than 5 schools scoring above the statewide average total SAT?","california_schools","HARD","SELECT sc.County FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds
+WHERE (ss.AvgScrRead+ss.AvgScrMath+ss.AvgScrWrite)>(SELECT AVG(AvgScrRead+AvgScrMath+AvgScrWrite) FROM satscores)
+GROUP BY sc.County HAVING COUNT(*)>5;","1",""
+"Which counties have an average total SAT score at least 50 points higher than the statewide average AND at least 15 schools?","california_schools","HARD","SELECT sc.County FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds GROUP BY sc.County
+HAVING AVG(ss.AvgScrRead+ss.AvgScrMath+ss.AvgScrWrite) >= (SELECT AVG(AvgScrRead+AvgScrMath+AvgScrWrite)+50 FROM satscores) AND COUNT(*)>=15;","1",""
+"Which schools rank in the top 3 total SAT scores within their county?","california_schools","HARD","SELECT sc.County, ss.sname, (ss.AvgScrRead+ss.AvgScrMath+ss.AvgScrWrite) AS total_sat FROM schools sc JOIN satscores ss ON sc.CDSCode=ss.cds
+WHERE (SELECT COUNT(*) FROM schools sc2 JOIN satscores ss2 ON sc2.CDSCode=ss2.cds WHERE sc2.County=sc.County AND (ss2.AvgScrRead+ss2.AvgScrMath+ss2.AvgScrWrite)>(ss.AvgScrRead+ss.AvgScrMath+ss.AvgScrWrite))<3;","1",""
+"How many molecules are recorded in the dataset?","toxicology","EASY","SELECT COUNT(*) AS total_molecules
+FROM molecule;","",""
+"How many molecules contain more than 10 atoms?","toxicology","MEDIUM","SELECT COUNT(*) FROM (SELECT m.molecule_id FROM molecule m JOIN atom a ON a.molecule_id = m.molecule_id
+GROUP BY m.molecule_id HAVING COUNT(a.atom_id) > 10) x;","0","Incorrect column reference: atom_count does not exist.
+Must count atoms via JOIN and GROUP BY."
+"How many molecules have more atoms than the average molecule?","toxicology","HARD","SELECT COUNT(*) FROM (SELECT molecule_id, COUNT(*) AS atom_count FROM atom
+GROUP BY molecule_id HAVING COUNT(*) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM atom GROUP BY molecule_id) t)) x;","1",""
+"How many molecules have bonds above the average number of bonds per molecule?","toxicology","HARD","SELECT COUNT(*) FROM (SELECT molecule_id, COUNT(*) AS bond_cnt FROM bond
+GROUP BY molecule_id HAVING COUNT(*) > (SELECT AVG(cnt) FROM (SELECT COUNT(*) AS cnt FROM bond GROUP BY molecule_id) x)) t;","1",""
+"Which molecule has the maximum number of bonds?","toxicology","HARD","SELECT molecule_id, COUNT(*) AS bond_cnt FROM bond
+GROUP BY molecule_id ORDER BY bond_cnt DESC LIMIT 1;","0","Invalid nested aggregation: MAX(COUNT(*)) is not allowed. Use ORDER BY + LIMIT or a subquery."
