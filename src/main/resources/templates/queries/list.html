@@ -82,6 +82,13 @@
 
 <a th:href="@{/queries/add}" class="btn btn-add">+ Add New Query</a>
 
+<form method="get" action="/queries" style="margin:20px 0;">
+    <input type="text" name="schema"
+           placeholder="Search by schema name..."
+           style="padding:8px; width:250px;">
+    <button type="submit" class="btn btn-add">Search</button>
+</form>
+
 <table>
     <thead>
     <tr>

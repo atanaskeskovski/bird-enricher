@@ -1,4 +1,4 @@
-package mk.finki.ukim.wp.birdenricher.service.impl;
+/*package mk.finki.ukim.wp.birdenricher.service.impl;
 
 import mk.finki.ukim.wp.birdenricher.model.SqlQuery;
 import mk.finki.ukim.wp.birdenricher.service.SqlQueryService;
@@ -47,4 +47,4 @@ public class InMemorySqlQueryService implements SqlQueryService {
     public void delete(Long id) {
         store.remove(id);
     }
-}
+}*/

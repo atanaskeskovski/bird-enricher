@@ -9,4 +9,5 @@ public interface SqlQueryService {
     SqlQuery create(SqlQuery q);
     SqlQuery update(Long id, SqlQuery q);
     void delete(Long id);
+    List<SqlQuery> findBySchema(String schema);
 }

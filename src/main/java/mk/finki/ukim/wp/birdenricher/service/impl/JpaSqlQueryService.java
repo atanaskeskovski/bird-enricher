@@ -10,25 +10,30 @@ import java.util.List;
 @Service
 public class JpaSqlQueryService implements SqlQueryService {
 
-    private final SqlQueryRepository repo;
+    private final SqlQueryRepository sqlQueryRepository;
 
     public JpaSqlQueryService(SqlQueryRepository repo) {
-        this.repo = repo;
+        this.sqlQueryRepository = repo;
     }
 
     @Override
     public List<SqlQuery> findAll() {
-        return repo.findAll();
+        return sqlQueryRepository.findAll();
     }
 
     @Override
     public SqlQuery findById(Long id) {
-        return repo.findById(id).orElseThrow();
+        return sqlQueryRepository.findById(id).orElseThrow();
     }
 
     @Override
     public SqlQuery create(SqlQuery q) {
-        return repo.save(q);
+        return sqlQueryRepository.save(q);
+    }
+
+    @Override
+    public List<SqlQuery> findBySchema(String schema) {
+        return sqlQueryRepository.findBySchemaNameContainingIgnoreCase(schema);
     }
 
     @Override
@@ -40,11 +45,11 @@ public class JpaSqlQueryService implements SqlQueryService {
         existing.setSqlAnswer(q.getSqlAnswer());
         existing.setChatgptValid(q.isChatgptValid());
         existing.setNotes(q.getNotes());
-        return repo.save(existing);
+        return sqlQueryRepository.save(existing);
     }
 
     @Override
     public void delete(Long id) {
-        repo.deleteById(id);
+        sqlQueryRepository.deleteById(id);
     }
 }

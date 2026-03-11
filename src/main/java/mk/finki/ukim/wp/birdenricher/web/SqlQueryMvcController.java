@@ -25,8 +25,14 @@ public class SqlQueryMvcController {
 
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("queries", service.findAll());
+    public String list(@RequestParam(required = false) String schema, Model model) {
+
+        if(schema != null && !schema.isEmpty()){
+            model.addAttribute("queries", service.findBySchema(schema));
+        } else {
+            model.addAttribute("queries", service.findAll());
+        }
+
         return "queries/list";
     }
 
