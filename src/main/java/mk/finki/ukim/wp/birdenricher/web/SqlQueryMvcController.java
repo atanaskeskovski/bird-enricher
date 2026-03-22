@@ -3,6 +3,10 @@ package mk.finki.ukim.wp.birdenricher.web;
 import mk.finki.ukim.wp.birdenricher.model.Difficulty;
 import mk.finki.ukim.wp.birdenricher.model.SqlQuery;
 import mk.finki.ukim.wp.birdenricher.service.SqlQueryService;
+import java.util.List;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +55,8 @@ public class SqlQueryMvcController {
                       @RequestParam Difficulty difficulty,
                       @RequestParam String sqlAnswer,
                       @RequestParam(defaultValue = "false") boolean chatgptValid,
-                      @RequestParam(required = false) String notes) {
+                      @RequestParam(required = false) String notes,
+                      @RequestParam(required = false) String schemaDdl) {
 
         SqlQuery q = new SqlQuery();
         q.setQuestion(question);
@@ -60,6 +65,7 @@ public class SqlQueryMvcController {
         q.setSqlAnswer(sqlAnswer);
         q.setChatgptValid(chatgptValid);
         q.setNotes(notes);
+        q.setSchemaDdl(schemaDdl);
 
         service.create(q);
         return "redirect:/queries";
@@ -81,7 +87,8 @@ public class SqlQueryMvcController {
                        @RequestParam Difficulty difficulty,
                        @RequestParam String sqlAnswer,
                        @RequestParam(defaultValue = "false") boolean chatgptValid,
-                       @RequestParam(required = false) String notes) {
+                       @RequestParam(required = false) String notes,
+                       @RequestParam(required = false) String schemaDdl) {
 
         SqlQuery q = new SqlQuery();
         q.setQuestion(question);
@@ -90,6 +97,7 @@ public class SqlQueryMvcController {
         q.setSqlAnswer(sqlAnswer);
         q.setChatgptValid(chatgptValid);
         q.setNotes(notes);
+        q.setSchemaDdl(schemaDdl);
 
         service.update(id, q);
         return "redirect:/queries";
@@ -100,5 +108,36 @@ public class SqlQueryMvcController {
     public String delete(@PathVariable Long id) {
         service.delete(id);
         return "redirect:/queries";
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export() {
+        List<SqlQuery> queries = service.findAll();
+        StringBuilder sb = new StringBuilder();
+        sb.append("id,question,schema_name,difficulty,sql_answer,chatgpt_valid,notes,schema_ddl\n");
+        for (SqlQuery q : queries) {
+            sb.append(escapeCsv(String.valueOf(q.getId()))).append(",");
+            sb.append(escapeCsv(q.getQuestion())).append(",");
+            sb.append(escapeCsv(q.getSchemaName())).append(",");
+            sb.append(escapeCsv(q.getDifficulty() != null ? q.getDifficulty().name() : "")).append(",");
+            sb.append(escapeCsv(q.getSqlAnswer())).append(",");
+            sb.append(escapeCsv(String.valueOf(q.isChatgptValid()))).append(",");
+            sb.append(escapeCsv(q.getNotes())).append(",");
+            sb.append(escapeCsv(q.getSchemaDdl())).append("\n");
+        }
+        byte[] bytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sql_queries_export.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(bytes);
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        String escaped = value.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
     }
 }

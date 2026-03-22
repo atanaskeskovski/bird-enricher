@@ -49,6 +49,9 @@
         <textarea th:field="*{sqlAnswer}" rows="8" required></textarea>
 
 
+        <label>Schema DDL <span class="hint">(опционално — CREATE TABLE изјави за оваа шема)</span></label>
+        <textarea name="schemaDdl" rows="6" placeholder="CREATE TABLE member (&#10;  id INT PRIMARY KEY,&#10;  name VARCHAR(255)&#10;);"></textarea>
+
         <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
             <input type="checkbox" name="chatgptValid" value="true"/>
             ChatGPT valid

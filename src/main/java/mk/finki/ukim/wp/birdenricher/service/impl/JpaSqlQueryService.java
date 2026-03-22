@@ -45,6 +45,7 @@ public class JpaSqlQueryService implements SqlQueryService {
         existing.setSqlAnswer(q.getSqlAnswer());
         existing.setChatgptValid(q.isChatgptValid());
         existing.setNotes(q.getNotes());
+        existing.setSchemaDdl(q.getSchemaDdl());
         return sqlQueryRepository.save(existing);
     }
 

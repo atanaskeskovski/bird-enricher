@@ -30,6 +30,9 @@ public class SqlQuery {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "schema_ddl", columnDefinition = "TEXT")
+    private String schemaDdl;
+
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
@@ -63,6 +66,8 @@ public class SqlQuery {
     public void setChatgptValid(boolean chatgptValid) { this.chatgptValid = chatgptValid; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getSchemaDdl() { return schemaDdl; }
+    public void setSchemaDdl(String schemaDdl) { this.schemaDdl = schemaDdl; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

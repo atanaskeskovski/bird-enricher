@@ -74,13 +74,29 @@
             background-color: #1976d2;
             transform: translateY(-1px);
         }
+        .btn-export {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-export:hover {
+            background-color: #388e3c;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
 
 <h1>SQL Queries</h1>
 
-<a th:href="@{/queries/add}" class="btn btn-add">+ Add New Query</a>
+<div style="display:flex; gap:10px; margin-bottom:20px;">
+    <a th:href="@{/queries/add}" class="btn btn-add">+ Add New Query</a>
+    <a th:href="@{/queries/export}" class="btn btn-export">⬇ Export CSV</a>
+</div>
 
 <form method="get" action="/queries" style="margin:20px 0;">
     <input type="text" name="schema"
@@ -99,6 +115,7 @@
         <th>SQL Answer</th>
         <th>ChatGPT Valid</th>
         <th>Notes</th>
+        <th>Schema DDL</th>
         <th>Actions</th>
     </tr>
     </thead>
@@ -113,6 +130,7 @@
         </td>
         <td th:text="${q.chatgptValid}"></td>
         <td th:text="${q.notes}"></td>
+        <td><pre th:if="${q.schemaDdl != null and !#strings.isEmpty(q.schemaDdl)}"><code th:text="${q.schemaDdl}"></code></pre></td>
         <td>
             <div style="display:flex; gap:8px;">
                 <a th:href="@{/queries/edit/{id}(id=${q.id})}"
